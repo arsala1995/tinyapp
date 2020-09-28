@@ -25,7 +25,16 @@ app.get("/set", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
- 
+
+app.get("/urls/:shortURL", (req, res) => {
+  console.log(req.params);
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  res.render("urls_show", templateVars);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+
+// Fill out the urls_show.ejs template to display the long URL and its shortened form. Also include a link (href='#') for creating a new url. 
