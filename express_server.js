@@ -32,25 +32,39 @@ app.get("/set", (req, res) => {
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
-
+app.get("/u/:shortURL", (req, res) => {
+  // console.log(shortURL);
+  const longURL = urlDatabase[req.params.shortURL];
+ res.redirect(longURL);
+});
 app.get("/urls/:shortURL", (req, res) => {
-  console.log(req.params);
+  // console.log(req.params);
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
+
+  let longReq = req.body;
+  // console.log(longReq);  // Log the POST request body to the console
   let message = generateRandomString();
-  res.send(message);         // Respond with 'Ok' (we will replace this)
+  urlDatabase[message] = longReq.longURL;
+
+console.log(urlDatabase);
+ 
+  res.send(message);         // Respond with 'new short url'
 });
 
 function generateRandomString(bod) {
  return Math.random().toString(20).substr(2,6);
 }
 
+app.post("/urls/:shortURL/delete", (req, res) => {
 
-
+  const templateVars =  req.params.shortURL;
+  delete urlDatabase[templateVars];
+  res.redirect("/urls");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
