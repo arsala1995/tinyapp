@@ -50,7 +50,7 @@ app.post("/urls", (req, res) => {
   let message = generateRandomString();
   urlDatabase[message] = longReq.longURL;
 
-console.log(urlDatabase);
+// console.log(urlDatabase);
  
   res.send(message);         // Respond with 'new short url'
 });
@@ -63,6 +63,16 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
   const templateVars =  req.params.shortURL;
   delete urlDatabase[templateVars];
+  res.redirect("/urls");
+});
+
+app.post("/urls/:shortURL/submit", (req, res) => {
+
+  const newLongUrl = req.body.newUrl;
+  const templateVars =  req.params.shortURL;
+  urlDatabase[templateVars] = newLongUrl;
+  console.log(newLongUrl);
+  
   res.redirect("/urls");
 });
 
