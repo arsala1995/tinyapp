@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const PORT = 7000; // default port 
-
+const bcrypt = require('bcrypt');
 app.set("view engine", "ejs");
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
@@ -155,7 +155,7 @@ app.post("/urls/:shortURL/submit", (req, res) => {
 app.post("/register", (req, res) => {
   let newEmail = req.body.email;
   let newPass = req.body.password;
-
+  
   if (newEmail === "" && newPass === "") {
     res.sendStatus(404);
   }
@@ -166,9 +166,11 @@ app.post("/register", (req, res) => {
   }
 
   else {
+    const hashedPassword = bcrypt.hashSync(newPass, 10);
+  // console.log(hashedPassword);
     const newID = generateRandomString();
     res.cookie("user_id", newID);
-    users[newID] = { id: newID, email: newEmail, password: newPass };
+    users[newID] = { id: newID, email: newEmail, password: hashedPassword };
 
     res.redirect("/urls")
   }
@@ -212,6 +214,8 @@ app.post("/login", (req, res) => {
 
   const { email, password } = req.body;
 
+ 
+
   if (email === "" || password === "") {
     return res.status(400).send("No email and/or Password!");
 
@@ -219,15 +223,18 @@ app.post("/login", (req, res) => {
 
   const userFound = searchUser(users, email);
 
+  const dhashed = bcrypt.compareSync(password, userFound.password);
+// console.log(dhashed);
   if (!userFound) {
 
     return res.status(403).send("User not found");
   }
 
-  if (userFound.password !== password) {
+  if (!dhashed) {
 
     return res.status(401).send("Password Incorrect!");
   }
+// console.log(dhashed);
 
   res.cookie("user_id", userFound.id);
   res.redirect("/urls");
@@ -237,7 +244,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
 
-  // console.log(req.cookies);
+   console.log(users);
   res.clearCookie("user_id");
 
   res.redirect("/login")
