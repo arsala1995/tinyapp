@@ -50,8 +50,14 @@ const users = {
 }
 
 app.get("/", (req, res) => {
-
-  res.send("Hello!");
+  const user = req.session.user_id;
+  if(user){
+    res.redirect("/urls");
+  }
+  else {
+    res.redirect("/login");
+  }
+  
 });
 
 app.get("/urls.json", (req, res) => {
@@ -105,7 +111,7 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-//get for new url page
+//get for new url page where the user makes new urls and a short url is generated randomly online
   const user = req.session.user_id;
   const templateVars = {
     user: users[req.session.user_id]
@@ -121,13 +127,23 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
 
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+  const foundURL = urlDatabase[req.params.shortURL];
+  if (!foundURL) {
+    return res.status(403).send("No Such website exists!");
+  } else{
+    const longURL1 = foundURL["longURL"];
+    res.redirect(longURL1);
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
 //gets the show page with short url
   const foundURL = urlDatabase[req.params.shortURL];
+  const user = req.session.user_id;
+  if(!user){
+    return res.status(403).send("User not logged in!");
+  }
+
   if (!foundURL) {
     return res.redirect("/urls");
   }
