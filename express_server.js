@@ -51,13 +51,12 @@ const users = {
 
 app.get("/", (req, res) => {
   const user = req.session.user_id;
-  if(user){
+  if (user) {
     res.redirect("/urls");
-  }
-  else {
+  } else {
     res.redirect("/login");
   }
-  
+
 });
 
 app.get("/urls.json", (req, res) => {
@@ -72,7 +71,7 @@ app.get("/set", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-//get for urls page
+  //get for urls page
   const user = req.session.user_id;
   const filter = urlsForUser(urlDatabase, user);
   const templateVars = {
@@ -85,7 +84,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-//get for register page
+  //get for register page
   console.log(req.session)
   if (req.session.user_id) {
     res.redirect("/urls");
@@ -101,7 +100,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-//get for login page
+  //get for login page
   const templateVars = {
     user: users[req.session.user_id]
   };
@@ -111,7 +110,7 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-//get for new url page where the user makes new urls and a short url is generated randomly online
+  //get for new url page where the user makes new urls and a short url is generated randomly online
   const user = req.session.user_id;
   const templateVars = {
     user: users[req.session.user_id]
@@ -130,22 +129,25 @@ app.get("/u/:shortURL", (req, res) => {
   const foundURL = urlDatabase[req.params.shortURL];
   if (!foundURL) {
     return res.status(403).send("No Such website exists!");
-  } else{
+  } else {
     const longURL1 = foundURL["longURL"];
     res.redirect(longURL1);
   }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-//gets the show page with short url
+  //gets the show page with short url
   const foundURL = urlDatabase[req.params.shortURL];
   const user = req.session.user_id;
-  if(!user){
+  if (!user) {
     return res.status(403).send("User not logged in!");
   }
-
+console.log(foundURL);
   if (!foundURL) {
     return res.redirect("/urls");
+  }
+  if(user !== foundURL.userID){
+    return res.status(403).send("This URL does not belong to you!");
   }
   const longURL = foundURL["longURL"];
   const templateVars = {
@@ -176,12 +178,12 @@ app.post("/urls", (req, res) => {
 });
 
 function generateRandomString(bod) {
-//function to generate random numbers
+  //function to generate random numbers
   return Math.random().toString(20).substr(2, 6);
 }
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-//deletes the url and then returns to url main page without the deleted website
+  //deletes the url and then returns to url main page without the deleted website
   const templateVars = req.params.shortURL;
   delete urlDatabase[templateVars];
   res.redirect("/urls");
@@ -204,7 +206,7 @@ app.post("/urls/:shortURL/submit", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-//user makes a new userid and password
+  //user makes a new userid and password
   let newEmail = req.body.email;
   let newPass = req.body.password;
 
@@ -232,7 +234,7 @@ app.post("/register", (req, res) => {
 });
 
 const urlsForUser = function (urlsDB, id) {
-//function for getting the ids
+  //function for getting the ids
   const filterUrls = {};
   for (let shortURL in urlsDB) {
     const urlObj = urlsDB[shortURL];
@@ -244,7 +246,7 @@ const urlsForUser = function (urlsDB, id) {
 }
 
 app.post("/login", (req, res) => {
-//login page where the user can login with already registered username and password
+  //login page where the user can login with already registered username and password
   const {
     email,
     password
@@ -256,26 +258,27 @@ app.post("/login", (req, res) => {
   }
 
   const userFound = getUserByEmail(users, email);
-  const dhashed = bcrypt.compareSync(password, userFound.password);
 
+  console.log(userFound);
   if (!userFound) {
 
     return res.status(403).send("User not found");
   }
 
+  const dhashed = bcrypt.compareSync(password, userFound.password);
   if (!dhashed) {
 
     return res.status(401).send("Password Incorrect!");
 
   }
-  
+
   req.session.user_id = userFound.id;
   res.redirect("/urls");
 
 });
 
 app.post("/logout", (req, res) => {
-//clears cookies and logsout the user
+  //clears cookies and logsout the user
   console.log(users);
   req.session = null;
   res.redirect("/urls")
